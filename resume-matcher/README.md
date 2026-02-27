@@ -11,7 +11,7 @@ The **AI Resume Matcher** uses **Vector Embeddings** to translate human language
 
 ---
 
-## �️ System Design & Technical Approach
+## System Design & Technical Approach
 
 This project follows a modern **Vector Search Architecture**. We use a specialized AI model to process text and the Endee engine to handle the heavy mathematical lifting.
 
