@@ -55,17 +55,25 @@ graph TD
 ---
 
 ## 🏗️ How Endee is Used
-To fulfill the core requirement, all vector storage and retrieval heavily relies on Endee's HTTP API. Inside [vector_store.py](vector_store.py), we integrate with these key endpoints:
 
-**1. Storing Resumes:**
-When a PDF is uploaded, we generate a vector and hit the Endee `insert` endpoint:  
-`POST {ENDEE_API_URL}/index/{ENDEE_INDEX_NAME}/vector/insert`  
-*Payload example:* `[{"id": "doc_1", "vector": [0.12, ...], "meta": "{\"filename\": \"...\"}"}]`
+Think of **Endee** as the high-speed "Brain" of this project. While a normal database looks for exact words, Endee understands the **meaning** of the text.
 
-**2. Searching Candidates:**
-When a Job Description is searched, we hit the Endee `search` endpoint:  
-`POST {ENDEE_API_URL}/index/{ENDEE_INDEX_NAME}/search`  
-*Payload example:* `{"vector": [0.12, ...], "k": 5}` *(Returns a msgpack binary response containing ranked matches).*
+### 1. The Setup (Indexing)
+When the app starts, it tells Endee to set up a specialized "Comparison Room" (Index). This room is configured to understand 384 different types of skills for every resume we upload.
+
+### 2. Saving Candidates (Insertion)
+When you upload a PDF, the AI turns the text into a long list of numbers called a **Vector**. We send this list to Endee, which stores it in its high-speed memory so it can be searched in milliseconds.
+
+**API Endpoint:** `POST /api/v1/index/{index_name}/vector/insert`  
+*Payload:* `[{"id": "resume_1", "vector": [...], "meta": "{...}"}]`
+
+### 3. Finding the Best Match (Search)
+When you type a Job Description, Endee calculates the "mathematical angle" between your requirement and every resume it has stored. 
+
+Even if a resume doesn't use the exact same words, if the **meaning** matches, Endee finds it! It returns the best candidates ranked by a **Similarity Score**.
+
+**API Endpoint:** `POST /api/v1/index/{index_name}/search`  
+*Payload:* `{"vector": [...], "k": 5}`
 
 ## 🚀 Quick Step-by-Step Guide to Run
 
