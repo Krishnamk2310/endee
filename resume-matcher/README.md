@@ -1,4 +1,4 @@
-## � Project Overview & Problem Statement
+##  Project Overview & Problem Statement
 
 ### The Problem
 Traditional resume screening relies on **keyword matching** (e.g., searching for "Python"). However, this often fails because:
