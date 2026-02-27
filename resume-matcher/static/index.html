@@ -1,0 +1,893 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Endee AI Resume Matcher</title>
+    <!-- fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #000000; /* bg color */
+            --container-bg: rgba(9, 9, 11, 0.75); /* dark glass */
+            --border-color: rgba(16, 185, 129, 0.15); /* border color */
+            --primary: #059669;      /* primary color */
+            --primary-hover: #10b981;
+            --text-main: #f1f5f9;
+            --text-muted: #64748b;
+            --accent: #34d399;       /* accent color */
+            --glow-color: rgba(16, 185, 129, 0.3);
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: var(--bg-color);
+            /* black gradient bg */
+            background-image: 
+                radial-gradient(circle at 15% 50%, rgba(16, 185, 129, 0.05) 0%, transparent 40%),
+                radial-gradient(circle at 85% 30%, rgba(5, 150, 105, 0.05) 0%, transparent 40%);
+            background-attachment: fixed;
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        header {
+            width: 100%;
+            padding: 2.5rem 0;
+            text-align: center;
+            background: linear-gradient(to bottom, rgba(0, 0, 0, 0.95), rgba(0, 0, 0, 0.3));
+            border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(20px);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        h1 {
+            margin: 0;
+            font-family: 'Space Grotesk', sans-serif;
+            font-weight: 700;
+            font-size: 3rem;
+            letter-spacing: -1px;
+            /* head gradient */
+            background: linear-gradient(135deg, #a7f3d0 0%, #34d399 50%, #059669 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 4px 20px rgba(16, 185, 129, 0.1);
+        }
+
+        p.subtitle {
+            margin-top: 0.5rem;
+            color: var(--text-muted);
+            font-size: 1.15rem;
+            font-weight: 300;
+            letter-spacing: 1px;
+        }
+
+        main {
+            display: flex;
+            gap: 2rem;
+            width: 90%;
+            max-width: 1200px;
+            margin-top: 3rem;
+        }
+
+        .panel {
+            flex: 1;
+            background: var(--container-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            padding: 2.5rem;
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 24px 38px 3px rgba(0, 0, 0, 0.14), inset 0 1px 1px rgba(255, 255, 255, 0.05);
+            display: flex;
+            flex-direction: column;
+            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.4s ease;
+        }
+
+        .panel:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.4), 0 40px 40px 10px rgba(0, 0, 0, 0.5), 0 0 20px var(--glow-color);
+            border-color: rgba(16, 185, 129, 0.4);
+        }
+
+        .panel h2 {
+            margin-top: 0;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 1rem;
+            font-size: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* upload styles */
+        .upload-area {
+            border: 2px dashed rgba(16, 185, 129, 0.3);
+            border-radius: 16px;
+            padding: 3.5rem 1rem;
+            text-align: center;
+            margin-top: 1rem;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            background: linear-gradient(180deg, rgba(16, 185, 129, 0.02) 0%, rgba(16, 185, 129, 0.05) 100%);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .upload-area::after {
+            content: '';
+            position: absolute;
+            top: 0; left: -100%; right: 0; bottom: 0;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.05), transparent);
+            transition: left 0.6s;
+        }
+
+        .upload-area:hover::after {
+            left: 100%;
+        }
+
+        .upload-area:hover, .upload-area.dragover {
+            border-color: var(--primary-hover);
+            background: rgba(16, 185, 129, 0.1);
+            box-shadow: inset 0 0 20px rgba(16, 185, 129, 0.05);
+        }
+
+        #file-input {
+            display: none;
+        }
+
+        .upload-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            display: block;
+        }
+
+        /* upload list */
+        .upload-status-list {
+            margin-top: 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .upload-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: rgba(15, 23, 42, 0.4);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 0.75rem 1rem;
+            font-size: 0.9rem;
+        }
+
+        .upload-item-name {
+            font-weight: 500;
+            color: #e2e8f0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .upload-item-status {
+            font-weight: 600;
+            font-size: 0.85rem;
+        }
+
+        .status-pending { color: var(--text-muted); }
+        .status-processing { color: var(--primary); }
+        .status-success { color: var(--accent); }
+        .status-error { color: #ef4444; }
+
+        .upload-item-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 100%;
+            cursor: pointer;
+        }
+
+        .upload-item-details {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out, padding 0.3s ease-out, margin 0.3s ease-out;
+            background: rgba(15, 23, 42, 0.6);
+            border-radius: 6px;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-top: 0;
+            padding: 0 1rem;
+        }
+
+        .upload-item.expanded .upload-item-details {
+            max-height: 500px;
+            padding: 1rem;
+            margin-top: 0.75rem;
+            border-top: 1px solid rgba(148, 163, 184, 0.1);
+        }
+
+        .upload-item-details pre {
+            margin: 0;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            font-family: monospace;
+            color: #93c5fd;
+        }
+        
+        .toggle-icon {
+            display: inline-block;
+            transition: transform 0.3s;
+            margin-right: 8px;
+            font-size: 0.8rem;
+        }
+
+        .upload-item.expanded .toggle-icon {
+            transform: rotate(90deg);
+        }
+
+        /* form styles */
+        textarea {
+            width: 100%;
+            height: 150px;
+            background: rgba(15, 23, 42, 0.8);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            color: var(--text-main);
+            padding: 1rem;
+            font-family: 'Inter', sans-serif;
+            font-size: 1rem;
+            resize: vertical;
+            box-sizing: border-box;
+            margin-top: 1rem;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3);
+        }
+
+        button {
+            background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+            color: black; /* high contrast */
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 12px;
+            padding: 1rem 2rem;
+            font-size: 1.1rem;
+            font-weight: 700;
+            font-family: 'Space Grotesk', sans-serif;
+            letter-spacing: 0.5px;
+            cursor: pointer;
+            margin-top: 1.5rem;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 4px 12px rgba(5, 150, 105, 0.3);
+        }
+
+        button:hover {
+            background: linear-gradient(135deg, #10b981 0%, #34d399 100%);
+            box-shadow: 0 8px 20px rgba(5, 150, 105, 0.5), inset 0 1px 0 rgba(255,255,255,0.2);
+            transform: translateY(-2px);
+        }
+        
+        button:active {
+            transform: scale(0.97) translateY(1px);
+            box-shadow: 0 2px 8px rgba(5, 150, 105, 0.3);
+        }
+
+        button:disabled {
+            background: #475569;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* result styles */
+        .results-container {
+            margin-top: 2rem;
+            width: 90%;
+            max-width: 1200px;
+            display: none;
+            padding-bottom: 4rem;
+        }
+
+        .results-container h2 {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 1.8rem !important;
+            color: #f8fafc;
+            border-bottom: 1px solid rgba(16, 185, 129, 0.3) !important;
+            text-shadow: 0 0 20px rgba(16, 185, 129, 0.2);
+            padding-bottom: 1rem !important;
+        }
+
+        .match-card {
+            background: linear-gradient(145deg, rgba(24, 24, 27, 0.8) 0%, rgba(9, 9, 11, 0.9) 100%);
+            border: 1px solid rgba(16, 185, 129, 0.15);
+            border-radius: 16px;
+            padding: 1.5rem 2rem;
+            margin-bottom: 1.25rem;
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            animation: slideUpFade 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            opacity: 0;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .match-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; width: 4px; height: 100%;
+            background: linear-gradient(to bottom, #4f46e5, #10b981);
+            opacity: 0.5;
+            transition: opacity 0.3s;
+        }
+
+        .match-card:hover {
+            transform: scale(1.01) translateY(-2px);
+            border-color: rgba(16, 185, 129, 0.5);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.4), 0 0 20px rgba(16, 185, 129, 0.15);
+        }
+
+        .match-card:hover::before {
+            opacity: 1;
+        }
+
+        @keyframes slideUpFade {
+            from { opacity: 0; transform: translateY(20px) scale(0.98); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        .match-card-content {
+            flex: 1;
+            padding-right: 2rem;
+        }
+
+        .match-filename {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #f8fafc;
+            margin: 0 0 0.5rem 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .match-snippet {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            line-height: 1.5;
+            margin: 0;
+        }
+
+        .match-score {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, rgba(5, 150, 105, 0.25) 100%);
+            color: #34d399;
+            padding: 1rem 1.5rem;
+            border-radius: 20px;
+            border: 1px solid rgba(52, 211, 153, 0.3);
+            font-family: 'Space Grotesk', sans-serif;
+            font-weight: 700;
+            font-size: 1.5rem;
+            margin-left: 1rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.1), inset 0 0 20px rgba(16, 185, 129, 0.05);
+            text-shadow: 0 2px 10px rgba(16, 185, 129, 0.4);
+        }
+        
+        .match-score span {
+            font-size: 0.75rem;
+            font-weight: 400;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-top: 2px;
+        }
+
+        .loader {
+            display: none;
+            width: 22px;
+            height: 22px;
+            border: 3px solid rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            border-top-color: #ffffff;
+            animation: spin 0.8s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        /* notifications */
+        #notification {
+            position: fixed;
+            top: 24px;
+            right: 24px;
+            padding: 1rem 1.5rem;
+            border-radius: 12px;
+            color: white;
+            font-weight: 500;
+            transform: translateX(150%);
+            transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            z-index: 1000;
+            box-shadow: 0 10px 25px -5px rgba(0,0,0,0.3), 0 0 15px rgba(0,0,0,0.1);
+            backdrop-filter: blur(8px);
+            font-family: 'Space Grotesk', sans-serif;
+            letter-spacing: 0.5px;
+        }
+
+        #notification.show {
+            transform: translateX(0);
+        }
+        
+        .success { background: var(--accent); }
+        .error { background: #ef4444; }
+
+        /* health ind */
+        .health-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 1.5rem;
+            padding: 0.6rem 1.2rem;
+            background: rgba(17, 24, 39, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 30px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            letter-spacing: 0.5px;
+            box-shadow: inset 0 1px 1px rgba(255,255,255,0.05);
+            backdrop-filter: blur(8px);
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: var(--text-muted);
+            position: relative;
+        }
+
+        .health-indicator.online .status-dot {
+            background-color: var(--accent);
+            box-shadow: 0 0 10px var(--accent);
+        }
+
+        .health-indicator.offline .status-dot {
+            background-color: #ef4444;
+            box-shadow: 0 0 10px #ef4444;
+        }
+
+        /* how it works */
+        .how-it-works {
+            width: 90%;
+            max-width: 1200px;
+            margin: 3rem 0;
+            background: var(--container-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 2rem;
+            backdrop-filter: blur(12px);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .how-it-works h2 {
+            margin-top: 0;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 1rem;
+            font-size: 1.5rem;
+            color: #e2e8f0;
+        }
+
+        .hw-section {
+            margin-top: 1.5rem;
+        }
+
+        .hw-section h3 {
+            color: var(--primary);
+            font-size: 1.2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .hw-section p {
+            color: var(--text-muted);
+            line-height: 1.6;
+            margin-bottom: 0.5rem;
+        }
+
+        .hw-section ul {
+            color: var(--text-muted);
+            line-height: 1.6;
+            margin-top: 0;
+            padding-left: 1.5rem;
+        }
+        
+        .hw-section li {
+            margin-bottom: 0.5rem;
+        }
+
+        .hw-section code {
+            background: rgba(15, 23, 42, 0.8);
+            padding: 0.2rem 0.4rem;
+            border-radius: 4px;
+            font-family: monospace;
+            color: #93c5fd;
+            font-size: 0.9em;
+        }
+
+        @media (max-width: 768px) {
+            main {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>AI Semantic Matcher</h1>
+        <p class="subtitle">Powered by Endee Vector Database</p>
+        <div id="health-indicator" class="health-indicator">
+            <span class="status-dot"></span> <span id="health-text">Checking API Status...</span>
+        </div>
+    </header>
+
+    <div id="notification"></div>
+
+    <main>
+        <!-- knowledge base -->
+        <div class="panel">
+            <h2>📄 1. Knowledge Base</h2>
+            <p style="color: var(--text-muted); margin-bottom: 0;">Upload PDF resumes to your Endee vector database.</p>
+            
+            <div class="upload-area" id="drop-zone" onclick="document.getElementById('file-input').click()">
+                <span class="upload-icon">📁</span>
+                <p style="font-weight: 600; margin-bottom: 5px;">Drag & Drop Candidate Resumes Here</p>
+                <p style="color: var(--text-muted); font-size: 0.9rem; margin-top: 0;">or click to browse from files (PDF only)</p>
+                <input type="file" id="file-input" accept=".pdf" multiple>
+            </div>
+            
+            <div id="upload-status" style="margin-top: 1rem; font-size: 0.9rem; color: var(--accent); text-align: center;"></div>
+            <div id="upload-status-list" class="upload-status-list"></div>
+            <div id="upload-loader" class="loader" style="margin-top: 1rem;"></div>
+        </div>
+
+        <!-- search area -->
+        <div class="panel">
+            <h2>🎯 2. Find Candidates</h2>
+            <p style="color: var(--text-muted); margin-bottom: 0;">Perform semantic search using a Job Description.</p>
+            
+            <textarea id="jd-input" placeholder="Paste your Job Description here... e.g. 'Looking for a Senior Software Engineer with strong Python and Vector DB experience.'"></textarea>
+            
+            <button id="search-btn" onclick="performSearch()">
+                <span id="btn-text">Semantic Match</span>
+                <div id="search-loader" class="loader"></div>
+            </button>
+        </div>
+    </main>
+
+    <!-- results -->
+    <div class="results-container" id="results-area">
+        <h2 style="font-size: 1.5rem; margin-bottom: 1.5rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem;">
+            🏆 Top Semantic Matches
+        </h2>
+        <div id="matches-list">
+            <!-- Cards injected via JS -->
+        </div>
+    </div>
+
+    <!-- deep dive -->
+    <section class="how-it-works">
+        <h2>ℹ️ How This Works (Behind the Scenes)</h2>
+        
+        <div class="hw-section">
+            <h3>1. The Foundation (Endee DB & FastAPI)</h3>
+            <p>We have two main pieces of software running:</p>
+            <ul>
+                <li><strong>Endee Vector Database:</strong> Running inside a Docker container. This is a specialized database built in C++ that is designed to store and instantly search through massive arrays of numbers (vectors).</li>
+                <li><strong>FastAPI Backend:</strong> The Python web server. This acts as the brain that coordinates data between the user and the Endee database.</li>
+            </ul>
+        </div>
+
+        <div class="hw-section">
+            <h3>2. Step One: Uploading a Resume (<code>POST /upload_resume</code>)</h3>
+            <p>When you use the upload box to submit a PDF file, here is the sequence of events:</p>
+            <ul>
+                <li><strong>Text Extraction:</strong> The file hits our FastAPI endpoint in <code>app.py</code>. We pass the raw PDF data to our custom <code>pdf_parser.py</code> script, which uses the <code>pypdf</code> library to read through the document and extract all the raw, human-readable text.</li>
+                <li><strong>AI Embedding:</strong> We give that extracted text to an AI model called <code>sentence-transformers</code> (specifically the <code>all-MiniLM-L6-v2</code> model). This model understands language and translates the entire resume text into a <strong>Vector Embedding</strong>—which is simply a mathematical array of 384 floating-point numbers. Think of this vector as a mathematical coordinate that represents the "meaning" or "skills" described in the resume.</li>
+                <li><strong>Storage (Endee API):</strong> Our <code>vector_store.py</code> script takes this 384-dimensional array, attaches a unique ID and some metadata, and makes a direct HTTP request to the Endee database via <code>POST /api/v1/index/{index_name}/vector/insert</code>.</li>
+            </ul>
+        </div>
+
+        <div class="hw-section">
+            <h3>3. Step Two: Finding a Match (<code>POST /match</code>)</h3>
+            <p>When you have a new open role and need to find the best candidate, you use the search box:</p>
+            <ul>
+                <li><strong>Job Description Embedding:</strong> You type in the Job Description. The exact same AI model translates this Job Description text into a new 384-dimensional query vector.</li>
+                <li><strong>Semantic Search (Endee API):</strong> Our <code>vector_store.py</code> script sends this query vector directly to the Endee Database via <code>POST /api/v1/index/{index_name}/search</code> to find the mathematically closest resume vectors.</li>
+                <li><strong>Endee Engine at work:</strong> Because Endee is an ultra-fast vector database, it uses a distance metric called <strong>Cosine Similarity</strong> to instantly measure the angles between your Job Description vector and every single candidate's resume vector it has stored. The smaller the angle, the more semantically similar they are.</li>
+                <li><strong>Returning Results:</strong> Endee packages the best matches up into a highly compressed binary format called <strong>MessagePack</strong> and sends it back to Python.</li>
+                <li><strong>Final Output:</strong> Our Python script unpacks the binary response, extracts the candidate IDs, original filenames, and their Similarity Scores (a number between 0 and 1, where 1 is a perfect match), and displays them ranked in order to you.</li>
+            </ul>
+        </div>
+    </section>
+
+
+    <script>
+        // health check ping
+        async function checkHealth() {
+            const indicator = document.getElementById('health-indicator');
+            const text = document.getElementById('health-text');
+            try {
+                const res = await fetch('/health');
+                if (res.ok) {
+                    indicator.className = 'health-indicator online';
+                    text.textContent = 'API Status: Online 🟢';
+                } else {
+                    indicator.className = 'health-indicator offline';
+                    text.textContent = 'API Status: Error 🔴';
+                }
+            } catch (e) {
+                indicator.className = 'health-indicator offline';
+                text.textContent = 'API Status: Offline 🔴';
+            }
+        }
+        
+        // init check
+        checkHealth();
+        setInterval(checkHealth, 10000);
+
+        // notifications
+        function showNotification(msg, type) {
+            const el = document.getElementById('notification');
+            el.textContent = msg;
+            el.className = type + ' show';
+            setTimeout(() => { el.className = '' }, 4000);
+        }
+
+        // dnd file upload
+        const dropZone = document.getElementById('drop-zone');
+        const fileInput = document.getElementById('file-input');
+
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            dropZone.addEventListener(eventName, preventDefaults, false);
+        });
+
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+
+        ['dragenter', 'dragover'].forEach(eventName => {
+            dropZone.addEventListener(eventName, () => dropZone.classList.add('dragover'), false);
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            dropZone.addEventListener(eventName, () => dropZone.classList.remove('dragover'), false);
+        });
+
+        dropZone.addEventListener('drop', handleDrop, false);
+        fileInput.addEventListener('change', function() { handleFiles(this.files) });
+
+        function handleDrop(e) {
+            let dt = e.dataTransfer;
+            let files = dt.files;
+            handleFiles(files);
+        }
+
+        async function handleFiles(files) {
+            if (files.length === 0) return;
+            
+            const loader = document.getElementById('upload-loader');
+            const statusLabel = document.getElementById('upload-status');
+            const statusList = document.getElementById('upload-status-list');
+            
+            // reset batch
+            statusList.innerHTML = '';
+            loader.style.display = 'inline-block';
+            statusLabel.textContent = `Processing ${files.length} file(s)...`;
+
+            let successCount = 0;
+
+            for (let i = 0; i < files.length; i++) {
+                const file = files[i];
+                
+                // ui for file
+                const itemDiv = document.createElement('div');
+                itemDiv.className = 'upload-item';
+                itemDiv.style.flexDirection = 'column';
+                itemDiv.style.alignItems = 'flex-start';
+                
+                const headerDiv = document.createElement('div');
+                headerDiv.className = 'upload-item-header';
+                
+                const nameSpan = document.createElement('span');
+                nameSpan.className = 'upload-item-name';
+                nameSpan.innerHTML = `<span class="toggle-icon">▶</span> 📄 ${file.name}`;
+                
+                const statusSpan = document.createElement('span');
+                statusSpan.className = 'upload-item-status status-pending';
+                statusSpan.textContent = 'Pending...';
+                
+                headerDiv.appendChild(nameSpan);
+                headerDiv.appendChild(statusSpan);
+                
+                const detailsDiv = document.createElement('div');
+                detailsDiv.className = 'upload-item-details';
+                
+                const detailsPre = document.createElement('pre');
+                detailsPre.textContent = 'Waiting in queue...';
+                detailsDiv.appendChild(detailsPre);
+
+                itemDiv.appendChild(headerDiv);
+                itemDiv.appendChild(detailsDiv);
+                statusList.appendChild(itemDiv);
+
+                // accordion logic
+                headerDiv.onclick = () => {
+                    itemDiv.classList.toggle('expanded');
+                };
+
+                if(file.type !== "application/pdf") {
+                    statusSpan.textContent = 'Skipped (Not PDF)';
+                    statusSpan.className = 'upload-item-status status-error';
+                    detailsPre.textContent = 'Error: The provided file is not a valid PDF format.';
+                    continue;
+                }
+
+                const formData = new FormData();
+                formData.append("file", file);
+
+                try {
+                    statusSpan.textContent = 'Extracting & Embedding...';
+                    statusSpan.className = 'upload-item-status status-processing';
+                    detailsPre.textContent = '1. Uploading to server...\n2. Extracting text via pypdf...\n3. Generating 384-dimensional vector with all-MiniLM-L6-v2...';
+                    
+                    const response = await fetch('/upload_resume', {
+                        method: 'POST',
+                        body: formData
+                    });
+
+                    if (response.ok) {
+                        const data = await response.json();
+                        successCount++;
+                        statusSpan.textContent = 'Indexed ✓';
+                        statusSpan.className = 'upload-item-status status-success';
+                        
+                        detailsPre.innerHTML = `<b>Success!</b>\n\n<b>Document ID:</b> ${data.resume_id}\n\n<b>Vector Dimension:</b> 384D\n<b>Status:</b> Stored safely in Endee DB memory.`;
+                    } else {
+                        const err = await response.json();
+                        statusSpan.textContent = 'Failed ❌';
+                        statusSpan.className = 'upload-item-status status-error';
+                        detailsPre.textContent = `Server Error Details:\n${err.detail || 'Unknown failure during parsing/embedding.'}`;
+                        showNotification(`Error on ${file.name}: ${err.detail || 'Upload failed'}`, 'error');
+                    }
+                } catch (error) {
+                    statusSpan.textContent = 'Server Error ❌';
+                    statusSpan.className = 'upload-item-status status-error';
+                    detailsPre.textContent = 'Fatal Error: Could not connect to the FastAPI backend. Is the server running?';
+                }
+            }
+
+            loader.style.display = 'none';
+            if (successCount > 0) {
+                statusLabel.textContent = `Successfully indexed ${successCount} resume(s)!`;
+                showNotification(`Indexed ${successCount} resume(s) to Endee DB!`, 'success');
+            } else {
+                statusLabel.textContent = 'Upload finished with errors.';
+            }
+            
+            // Clear input so same file can be selected again if needed
+            fileInput.value = "";
+        }
+
+        // search logic
+        async function performSearch() {
+            const jd = document.getElementById('jd-input').value;
+            if(!jd.trim()) {
+                showNotification("Please enter a job description", "error");
+                return;
+            }
+
+            const btn = document.getElementById('search-btn');
+            const btnText = document.getElementById('btn-text');
+            const loader = document.getElementById('search-loader');
+            const resultsArea = document.getElementById('results-area');
+            const matchesList = document.getElementById('matches-list');
+
+            // loading state
+            btn.disabled = true;
+            btnText.style.display = 'none';
+            loader.style.display = 'block';
+            
+            try {
+                const response = await fetch('/match', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        job_description: jd,
+                        top_k: 5
+                    })
+                });
+
+                if(response.ok) {
+                    const data = await response.json();
+                    
+                    matchesList.innerHTML = ''; // clear matches
+                    
+                    if(data.matches.length === 0) {
+                        matchesList.innerHTML = '<p style="color: var(--text-muted); text-align: center; padding: 2rem;">No matches found. Try uploading some resumes first!</p>';
+                    } else {
+                        data.matches.forEach((match, index) => {
+                            // get percentage
+                            const scorePct = (match.similarity_score * 100).toFixed(1);
+                            
+                            // metadata extraction
+                            const fileName = match.metadata.filename || `Resume ${index + 1}`;
+                            const snippet = match.metadata.text_snippet || "No text available.";
+                            
+                            const card = document.createElement('div');
+                            card.className = 'match-card';
+                            card.style.animationDelay = `${index * 0.1}s`;
+                            
+                                // capability badges
+                            let capabilitiesHTML = '';
+                            if (match.metadata.shared_keywords && match.metadata.shared_keywords.length > 0) {
+                                // top keywords
+                                const topKeywords = match.metadata.shared_keywords.slice(0, 6);
+                                capabilitiesHTML = topKeywords.map(kw => 
+                                    `<span class="keyword-badge" style="background: rgba(16, 185, 129, 0.15); color: #6ee7b7; border: 1px solid rgba(16, 185, 129, 0.3); padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; margin-right: 6px; margin-bottom: 6px; display: inline-block;">${kw}</span>`
+                                ).join('');
+                            } else {
+                                capabilitiesHTML = '<span style="color: var(--text-muted); font-size: 0.85rem;">No exact semantic keywords extracted.</span>';
+                            }
+
+                            card.innerHTML = `
+                                <div class="match-card-content">
+                                    <h3 class="match-filename">📄 ${fileName}</h3>
+                                    <p class="match-snippet">"...${snippet.replace(/\n/g, ' ')}..."</p>
+                                </div>
+                                <div class="match-score">
+                                    ${scorePct}%
+                                    <span>Match</span>
+                                </div>
+                            `;
+                            
+                            matchesList.appendChild(card);
+                        });
+                    }
+                    
+                    resultsArea.style.display = 'block';
+                    // scroll results
+                    resultsArea.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+                } else {
+                    const err = await response.json();
+                    showNotification(`Search failed: ${err.detail}`, 'error');
+                }
+            } catch (error) {
+                showNotification('Connection to server failed', 'error');
+            } finally {
+                // reset ui
+                btn.disabled = false;
+                btnText.style.display = 'block';
+                loader.style.display = 'none';
+            }
+        }
+    </script>
+</body>
+</html>
