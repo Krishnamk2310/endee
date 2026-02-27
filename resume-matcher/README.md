@@ -99,7 +99,8 @@ You will see the shiny new user interface. You can drag and drop your PDFs insid
 
 Here is a video demonstration of the project in action:
 
-<video src="assets/demo.mp4" width="100%" controls autoplay loop muted></video>
+
+[![Watch Demo](assets/thumbnail.png)](https://drive.google.com/file/d/1j9ESxL590447c3mFbRnzFXVTeebn84Vi/view?usp=sharing)
 
 ---
 
