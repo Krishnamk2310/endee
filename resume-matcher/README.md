@@ -116,7 +116,7 @@ When the frontend searches for a candidate, the backend returns this clean JSON 
       "similarity_score": 0.9818479623645544,
       "metadata": {
         "filename": "sample_resume.pdf",
-        "text_snippet": "John Doe. Senior Python Engineer. Experience with FastAPI and Vector Databases like Endee...."
+        "text_snippet": "Markandey Krishna Mishra. Senior Python Engineer. Experience with FastAPI and Vector Databases like Endee...."
       }
     }
   ]
